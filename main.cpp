@@ -108,68 +108,101 @@ void printPath(pair<int,int> exitcell,
     path.push_back({ent_r, ent_c});
 
     cout << "\nPath from entrance to exit:\n";
-    for (int i = path.size() - 1; i >= 0; i--) {
+    for (int i = (int)path.size() - 1; i >= 0; i--) {
         cout << "(" << path[i].first << ", " << path[i].second << ")\n";
     }
 }
 
 // ----------------------------------------------------------
 // STUDENTS IMPLEMENT DFS HERE
-// Add arguments, return type, and logic
 // ----------------------------------------------------------
-// bool dfs(……) {
-//     // Your code here
-// }
+bool dfs(int r, int c,
+         int exit_r, int exit_c,
+         const vector<vector<int>>& maze,
+         vector<vector<bool>>& visited,
+         vector<vector<int>>& parent_r,
+         vector<vector<int>>& parent_c)
+{
+    visited[r][c] = true;
 
+    // Base case: reached exit
+    if (r == exit_r && c == exit_c) {
+        return true;
+    }
+
+    int N = maze.size();
+    int M = maze[0].size();
+
+    // Attempting all 4 directions
+    for (int d = 0; d < 4; d++) {
+        int nr = r + dr[d];
+        int nc = c + dc[d];
+
+        // Checking bounds
+        if (nr < 0 || nr >= N || nc < 0 || nc >= M)
+            continue;
+
+        // Skipping walls
+        if (maze[nr][nc] == 1)
+            continue;
+
+        // Skipping visited cells
+        if (visited[nr][nc])
+            continue;
+
+        // Setting parent BEFORE recursing
+        parent_r[nr][nc] = r;
+        parent_c[nr][nc] = c;
+
+        // Recurse
+        if (dfs(nr, nc, exit_r, exit_c, maze, visited, parent_r, parent_c)) {
+            return true;    // A path is available
+        }
+    }
+
+    // No path can be found from this branch
+    return false;
+}
 
 // ----------------------------------------------------------
-// MAIN PROGRAM (students add DFS calls and logic)
+// MAIN PROGRAM
 // ----------------------------------------------------------
 int main() {
     int N, M;
 
-    cout << "Enter maze dimensions N M: ";
+    cout << "Enter maze dimensions N M, follow format when typing: ";
     cin >> N >> M;
 
     vector<vector<int>> maze(N, vector<int>(M));
     generateMaze(maze, N, M);
 
-    // Pick entrance and exit
+    // choose entrance, (S) and exit,  (E) on boundary
     pair<int,int> entrance = chooseBoundaryCell(maze);
     pair<int,int> exitcell = chooseBoundaryCell(maze);
 
-    while (exitcell == entrance) {
-        exitcell = chooseBoundaryCell(maze);
-    }
+    int start_r = entrance.first;
+    int start_c = entrance.second;
+    int exit_r  = exitcell.first;
+    int exit_c  = exitcell.second;
 
-    int ent_r = entrance.first;
-    int ent_c = entrance.second;
-    int exit_r = exitcell.first;
-    int exit_c = exitcell.second;
-
-    // Display the maze
-    printMaze(maze, ent_r, ent_c, exit_r, exit_c);
-
-    // Students must use these
+    // visited & parent arrays
     vector<vector<bool>> visited(N, vector<bool>(M, false));
     vector<vector<int>> parent_r(N, vector<int>(M, -1));
     vector<vector<int>> parent_c(N, vector<int>(M, -1));
 
-    // ------------------------------------------------------
-    // STUDENT WORK:
-    // Call your DFS, track visited, and fill parent_r and parent_c
-    // ------------------------------------------------------
-    // bool found = dfs(ent_r, ent_c, maze, visited, parent_r, parent_c, exit_r, exit_c);
+    // print the maze
+    printMaze(maze, start_r, start_c, exit_r, exit_c);
 
-    // ------------------------------------------------------
-    // STUDENT WORK:
-    // If found, print the path
-    // ------------------------------------------------------
-    // if (found) {
-    //     printPath(exitcell, parent_r, parent_c, ent_r, ent_c);
-    // } else {
-    //     cout << "\nNo path exists.\n";
-    // }
+    // DFS
+    bool found = dfs(start_r, start_c,
+                     exit_r, exit_c,
+                     maze, visited, parent_r, parent_c);
+
+    if (found) {
+        printPath(exitcell, parent_r, parent_c, start_r, start_c);
+    } else {
+        cout << "Maze cannot be completed" << endl;
+    }
 
     return 0;
 }
